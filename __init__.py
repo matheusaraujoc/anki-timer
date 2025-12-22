@@ -21,6 +21,6 @@ def toggle_timer():
         _dock.show()
 
 # Criação da ação no menu Ferramentas
-action = QAction("TTimer de Estudo", mw)
+action = QAction("Timer de Estudo", mw)
 action.triggered.connect(toggle_timer)
 mw.form.menuTools.addAction(action)
