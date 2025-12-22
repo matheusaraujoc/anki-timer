@@ -1,0 +1,7 @@
+{
+    "name": "Study Timer Dock",
+    "package": "anki_timer",
+    "min_point_version": 50,
+    "max_point_version": 99,
+    "human_version": "1.0.0"
+}
