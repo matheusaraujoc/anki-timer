@@ -23,7 +23,6 @@ class TimerDisplayWidget(QWidget):
 
     def update_time(self, progress, remaining_seconds):
         self.progress = progress
-        # Usa teto (ceil) para que 9.8s apareça como 10s, resolvendo o "pulo" inicial
         display_seconds = math.ceil(remaining_seconds)
         mins, secs = divmod(int(display_seconds), 60)
         self.remaining_text = f"{mins:02d}:{secs:02d}"
@@ -86,7 +85,7 @@ class StudyTimerDock(QDockWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.addStretch()
         
-        self.settings_btn = QPushButton("⛭") # Ícone atualizado
+        self.settings_btn = QPushButton("⛭")
         self.settings_btn.setFixedSize(20, 20)
         self.settings_btn.setFlat(True)
         self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -104,14 +103,9 @@ class StudyTimerDock(QDockWidget):
         
         self.appearance_combo = QComboBox()
         self.appearance_combo.addItems(["Modo Circular", "Modo Foco"])
-        # Conecta sinal para salvar config ao mudar
-        self.appearance_combo.currentIndexChanged.connect(self.change_appearance)
         
         self.loop_cb = QCheckBox("Reiniciar auto")
-        self.loop_cb.stateChanged.connect(self._save_config)
-
-        self.sound_cb = QCheckBox("Alerta sonoro") # Novo checkbox
-        self.sound_cb.stateChanged.connect(self._save_config)
+        self.sound_cb = QCheckBox("Alerta sonoro")
         
         settings_layout.addWidget(self.lbl_appearance)
         settings_layout.addWidget(self.appearance_combo)
@@ -125,7 +119,6 @@ class StudyTimerDock(QDockWidget):
         input_layout = QHBoxLayout()
         self.min_input = QSpinBox()
         self.min_input.setRange(0, 999)
-        self.min_input.setValue(25)
         self.min_input.setSuffix("m")
         
         self.sec_input = QSpinBox()
@@ -159,30 +152,55 @@ class StudyTimerDock(QDockWidget):
         self.update_theme_styles()
         gui_hooks.theme_did_change.append(self.update_theme_styles)
         
-        # Carrega configurações salvas ao iniciar
+        # 1. Carrega as configurações PRIMEIRO
         self._load_config()
 
+        # 2. Só DEPOIS conecta os sinais de salvar
+        # Isso evita que o timer salve valores padrão enquanto está carregando
+        self.appearance_combo.currentIndexChanged.connect(self.change_appearance)
+        self.loop_cb.stateChanged.connect(self._save_config)
+        self.sound_cb.stateChanged.connect(self._save_config)
+        self.min_input.valueChanged.connect(self._save_config)
+        self.sec_input.valueChanged.connect(self._save_config)
+        self.visibilityChanged.connect(self._save_config)
+
     def _get_config_name(self):
-        # Pega o nome da pasta do addon para salvar configs
+        # Garante o nome correto do pacote (pasta)
         return __name__.split('.')[0]
 
     def _load_config(self):
-        config = mw.addonManager.getConfig(self._get_config_name()) or {}
+        # Bloqueia sinais para evitar loops de salvamento durante o load
+        self.blockSignals(True)
         
-        # Carrega e aplica as configs, com valores padrão (default)
+        config = mw.addonManager.getConfig(self._get_config_name())
+        # Se não houver config (config.json faltando), usa defaults mas não quebra
+        if not config:
+            config = {}
+
         self.appearance_combo.setCurrentIndex(config.get('appearance', 0))
         self.loop_cb.setChecked(config.get('loop', False))
         self.sound_cb.setChecked(config.get('sound', False))
+        self.min_input.setValue(config.get('minutes', 25))
+        self.sec_input.setValue(config.get('seconds', 0))
         
-        # Força atualização visual baseada no combo carregado
-        self.change_appearance(self.appearance_combo.currentIndex())
+        # Atualiza visual
+        self.timer_display.set_minimal_mode(self.appearance_combo.currentIndex() == 1)
+        
+        self.blockSignals(False)
 
     def _save_config(self):
-        # Salva o estado atual dos widgets no JSON do addon
+        if not self.isVisible():
+            # Pequena proteção: se estiver oculto mas for chamado, 
+            # garantimos que 'dock_visible' seja False, a menos que seja fechamento do Anki
+            pass
+
         config = {
             'appearance': self.appearance_combo.currentIndex(),
             'loop': self.loop_cb.isChecked(),
-            'sound': self.sound_cb.isChecked()
+            'sound': self.sound_cb.isChecked(),
+            'minutes': self.min_input.value(),
+            'seconds': self.sec_input.value(),
+            'dock_visible': self.isVisible()
         }
         mw.addonManager.writeConfig(self._get_config_name(), config)
 
@@ -236,7 +254,6 @@ class StudyTimerDock(QDockWidget):
 
     def change_appearance(self, index):
         self.timer_display.set_minimal_mode(index == 1)
-        # Salva configuração sempre que mudar a aparência
         self._save_config()
 
     def toggle_start(self):
@@ -248,7 +265,6 @@ class StudyTimerDock(QDockWidget):
                 self.total_seconds = (self.min_input.value() * 60) + self.sec_input.value()
                 if self.total_seconds == 0: return
                 self.elapsed_seconds = 0.0
-                # Atualiza display imediatamente para evitar começar com "segundo-1"
                 self.timer_display.update_time(0.0, self.total_seconds)
             
             self.state = RUNNING
@@ -279,7 +295,6 @@ class StudyTimerDock(QDockWidget):
         self.timer_display.update_time(progress, remaining)
         
         if remaining <= 0:
-            # Toca som se ativado
             if self.sound_cb.isChecked():
                 QApplication.beep()
 
