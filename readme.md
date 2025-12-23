@@ -10,7 +10,25 @@ O Study Timer Dock foi projetado para estudantes que utilizam técnicas de produ
   <img src="./screenshots/preview.png" alt="Preview do Addon" width="600">
 </p>
 <p align="center">
-  <em>Visualização do Timer no Anki com diferentes modos de aparência</em>
+  <em>Diferentes modos de aparência do Timer</em>
+</p>
+
+---
+
+<p align="center">
+  <img src="./screenshots/preview-fullscreen-dark.png" alt="Preview do Addon" width="600">
+</p>
+<p align="center">
+  <em>Visualização do Timer no Anki em modo Dark</em>
+</p>
+
+---
+
+<p align="center">
+  <img src="./screenshots/preview-fullscreen-white.png" alt="Preview do Addon" width="600">
+</p>
+<p align="center">
+  <em>Visualização do Timer no Anki em modo White</em>
 </p>
 
 ---
