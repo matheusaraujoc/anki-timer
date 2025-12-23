@@ -10,17 +10,14 @@ from aqt.qt import (
 )
 from .state import STOPPED, RUNNING, PAUSED
 
-# Constantes para os Modos de Visualização
 MODE_CIRCULAR = 0
 MODE_FOCUS = 1
 MODE_FLIP = 2
 MODE_LINEAR = 3 
 
-# Constantes para os Modos de Operação
 OP_MODE_TIMER = 0      
 OP_MODE_STOPWATCH = 1  
 
-# Configurações da Animação
 ANIMATION_DURATION = 800
 FRAME_RATE = 16 
 
@@ -35,18 +32,15 @@ class TimerDisplayWidget(QWidget):
         self.custom_text_color = None
         self.custom_ring_color = None
 
-        # Dados de Ciclos
         self.show_cycles = False
         self.current_cycle = 1
         self.total_cycles = 0 
 
-        # Variáveis de Animação
         self.anim_timer = QTimer(self)
         self.anim_timer.timeout.connect(self._anim_tick)
         self.anim_progress = 1.0 
         self.anim_start_time = 0.0
         
-        # Estados anteriores para animação (Strings)
         self.prev_h = "00"
         self.prev_m = "00"
         self.prev_s = "00"
@@ -285,11 +279,8 @@ class TimerDisplayWidget(QWidget):
         font.setFamily("Arial") 
         font.setWeight(QFont.Weight.Bold)
         
-        # --- CORREÇÃO DA FONTE PARA FLIP ---
-        # Calcula tamanho base pela altura
         pixel_size = int(card_height * 0.55)
-        # Se tiver horas, limita o tamanho da fonte pela LARGURA da placa
-        # para evitar que números como '0' ou '8' fiquem espremidos.
+
         if has_hours:
             pixel_size = min(pixel_size, int(card_width * 0.75))
             
@@ -437,7 +428,6 @@ class StudyTimerDock(QDockWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)
 
-        # --- Settings Button ---
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.addStretch()
@@ -450,7 +440,6 @@ class StudyTimerDock(QDockWidget):
         
         header_layout.addWidget(self.settings_btn)
 
-        # --- Settings Panel ---
         self.settings_panel = QFrame()
         self.settings_panel.setVisible(False)
         settings_layout = QVBoxLayout(self.settings_panel)
@@ -509,10 +498,8 @@ class StudyTimerDock(QDockWidget):
         settings_layout.addLayout(loop_layout)
         settings_layout.addWidget(self.sound_cb)
 
-        # --- Display ---
         self.timer_display = TimerDisplayWidget()
         
-        # --- Inputs ---
         input_layout = QHBoxLayout()
         self.hour_input = QSpinBox()
         self.hour_input.setRange(0, 99)
@@ -533,7 +520,6 @@ class StudyTimerDock(QDockWidget):
         input_layout.addWidget(self.min_input)
         input_layout.addWidget(self.sec_input)
 
-        # --- Buttons ---
         self.btn_start = QPushButton("INICIAR")
         self.btn_start.setFixedHeight(35)
         self.btn_start.clicked.connect(self.toggle_start)
